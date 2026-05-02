@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p src)",
+      "Bash(mv app *)",
+      "Bash(mkdir -p /Users/adityarawat/Desktop/pickaxe-mini/src/components /Users/adityarawat/Desktop/pickaxe-mini/src/lib /Users/adityarawat/Desktop/pickaxe-mini/src/server /Users/adityarawat/Desktop/pickaxe-mini/src/trpc)",
+      "Bash(touch /Users/adityarawat/Desktop/pickaxe-mini/src/components/.gitkeep /Users/adityarawat/Desktop/pickaxe-mini/src/lib/.gitkeep /Users/adityarawat/Desktop/pickaxe-mini/src/server/.gitkeep /Users/adityarawat/Desktop/pickaxe-mini/src/trpc/.gitkeep)"
+    ]
+  }
+}
