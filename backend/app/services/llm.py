@@ -18,7 +18,6 @@ async def generate_text(prompt: str) -> str:
     except Exception as e:
         raise LLMException(f"Gemini generation failed: {str(e)}")
 
-
 async def stream_chat(
     system_prompt: str,
     messages: list[dict],
@@ -30,18 +29,15 @@ async def stream_chat(
             system_instruction=system_prompt,
         )
 
-        # Convert messages to Gemini format
         history = [
             {
                 "role": "user" if m["role"] == "user" else "model",
                 "parts": [m["content"]],
             }
-            for m in messages[:-1]  # all except last
+            for m in messages[:-1]
         ]
 
         chat = model.start_chat(history=history)
-
-        # Stream the last user message
         last_message = messages[-1]["content"]
         response = chat.send_message(last_message, stream=True)
 
@@ -50,4 +46,8 @@ async def stream_chat(
                 yield chunk.text
 
     except Exception as e:
-        raise LLMException(f"Gemini streaming failed: {str(e)}")
+        error_str = str(e)
+        if '429' in error_str:
+            yield "\n\n⚠️ Rate limit reached on Gemini free tier (20 requests/day). Please wait a few minutes and try again."
+        else:
+            yield f"\n\n⚠️ Something went wrong: {error_str[:100]}"
