@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sparkles, X, Bot, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Sparkles, X, Bot, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import { trpc } from '@/trpc/client';
+} from "@/components/ui/sheet";
+import { trpc } from "@/trpc/client";
 
 interface CreateAgentDrawerProps {
   open: boolean;
@@ -21,16 +21,16 @@ interface CreateAgentDrawerProps {
 
 export function CreateAgentDrawer({ open, onClose }: CreateAgentDrawerProps) {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const utils = trpc.useUtils();
 
   const createMutation = trpc.agents.create.useMutation({
     onSuccess: (agent) => {
       utils.agents.list.invalidate();
       onClose();
-      setName('');
-      setDescription('');
+      setName("");
+      setDescription("");
       router.push(`/agent/${agent.id}`);
     },
   });
@@ -46,7 +46,7 @@ export function CreateAgentDrawer({ open, onClose }: CreateAgentDrawerProps) {
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent
         side="right"
-          className="
+        className="
     sm:!w-[30%] 
     !max-w-none
     rounded-l-2xl 
@@ -58,8 +58,8 @@ export function CreateAgentDrawer({ open, onClose }: CreateAgentDrawerProps) {
             Create New Agent
           </SheetTitle>
           <p className="text-sm text-muted-foreground">
-            Describe your agent and Gemini will generate a system prompt
-            and greeting automatically.
+            Describe your agent and Gemini will generate a system prompt and
+            greeting automatically.
           </p>
         </SheetHeader>
 

@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import { trpc } from '@/trpc/client';
-import { AgentCard } from './agent-card';
-import { Bot } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { trpc } from "@/trpc/client";
+import { AgentCard } from "./agent-card";
+import { Bot } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const AVATAR_COLORS = [
-  '#6366f1', '#10b981', '#f59e0b',
-  '#ec4899', '#8b5cf6', '#06b6d4',
+  "#6366f1",
+  "#10b981",
+  "#f59e0b",
+  "#ec4899",
+  "#8b5cf6",
+  "#06b6d4",
 ];
 
 export function AgentsGrid() {

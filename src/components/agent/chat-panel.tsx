@@ -1,17 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Send, Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { trpc } from '@/trpc/client';
-import ReactMarkdown from 'react-markdown';
-
+import { useState, useRef, useEffect } from "react";
+import { Send, Bot } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/core/utils";
+import { trpc } from "@/trpc/client";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
@@ -30,18 +29,18 @@ export function ChatPanel({
   systemPrompt,
   initialGreeting,
 }: ChatPanelProps) {
-    const utils = trpc.useUtils();
+  const utils = trpc.useUtils();
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'greeting', role: 'assistant', content: initialGreeting },
+    { id: "greeting", role: "assistant", content: initialGreeting },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load existing conversation from DB
   const { data: conversation } = trpc.conversations.getByAgent.useQuery(
     { agentId },
-    { enabled: !!agentId }
+    { enabled: !!agentId },
   );
 
   const addMessage = trpc.conversations.addMessage.useMutation();
@@ -60,7 +59,7 @@ export function ChatPanel({
 
   // Auto scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = async () => {
@@ -68,18 +67,18 @@ export function ChatPanel({
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: 'user',
+      role: "user",
       content: input.trim(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setInput("");
     setIsStreaming(true);
 
     // Save user message to DB
     await addMessage.mutateAsync({
       agentId,
-      role: 'user',
+      role: "user",
       content: userMessage.content,
     });
     utils.agents.list.invalidate();
@@ -87,21 +86,21 @@ export function ChatPanel({
     const assistantId = (Date.now() + 1).toString();
     setMessages((prev) => [
       ...prev,
-      { id: assistantId, role: 'assistant', content: '' },
+      { id: assistantId, role: "assistant", content: "" },
     ]);
 
     try {
       // Build message history for context
       const chatHistory = messages
-        .filter((m) => m.id !== 'greeting')
+        .filter((m) => m.id !== "greeting")
         .map((m) => ({ role: m.role, content: m.content }));
 
-      chatHistory.push({ role: 'user', content: userMessage.content });
+      chatHistory.push({ role: "user", content: userMessage.content });
 
       // Call streaming endpoint
-      const res = await fetch('/api/chat/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           system_prompt: systemPrompt,
           agent_name: agentName,
@@ -111,7 +110,7 @@ export function ChatPanel({
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
-      let fullResponse = '';
+      let fullResponse = "";
 
       if (reader) {
         while (true) {
@@ -119,10 +118,10 @@ export function ChatPanel({
           if (done) break;
 
           const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
+          const lines = chunk.split("\n");
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
+            if (line.startsWith("data: ")) {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.text) {
@@ -131,8 +130,8 @@ export function ChatPanel({
                     prev.map((m) =>
                       m.id === assistantId
                         ? { ...m, content: fullResponse }
-                        : m
-                    )
+                        : m,
+                    ),
                   );
                 }
               } catch {}
@@ -145,20 +144,20 @@ export function ChatPanel({
       if (fullResponse) {
         await addMessage.mutateAsync({
           agentId,
-          role: 'assistant',
+          role: "assistant",
           content: fullResponse,
         });
         utils.agents.list.invalidate();
       }
     } catch (err) {
-      console.error('Streaming error:', err);
+      console.error("Streaming error:", err);
     } finally {
       setIsStreaming(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -177,7 +176,7 @@ export function ChatPanel({
         <div>
           <h3 className="font-semibold text-foreground">{agentName}</h3>
           <p className="text-xs text-muted-foreground">
-            {isStreaming ? 'Typing...' : 'Online'}
+            {isStreaming ? "Typing..." : "Online"}
           </p>
         </div>
       </div>
@@ -188,37 +187,37 @@ export function ChatPanel({
           <div
             key={message.id}
             className={cn(
-              'flex gap-3',
-              message.role === 'user' ? 'justify-end' : 'justify-start'
+              "flex gap-3",
+              message.role === "user" ? "justify-end" : "justify-start",
             )}
           >
-{message.role === 'assistant' && message.content && (
-  <div
-    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-    style={{ backgroundColor: agentColor }}
-  >
-    <Bot className="h-4 w-4 text-white" />
-  </div>
-)}
-{message.content && (
-  <div
-    className={cn(
-      'max-w-[75%] rounded-2xl px-4 py-2.5',
-      message.role === 'user'
-        ? 'bg-primary text-primary-foreground'
-        : 'bg-muted text-foreground'
-    )}
-  >
-    <div className="prose prose-sm max-w-none">
-      <ReactMarkdown>{message.content}</ReactMarkdown>
-    </div>
-  </div>
-)}
+            {message.role === "assistant" && message.content && (
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: agentColor }}
+              >
+                <Bot className="h-4 w-4 text-white" />
+              </div>
+            )}
+            {message.content && (
+              <div
+                className={cn(
+                  "max-w-[75%] rounded-2xl px-4 py-2.5",
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground",
+                )}
+              >
+                <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
         {/* Streaming indicator */}
-        {isStreaming && messages[messages.length - 1]?.content === '' && (
+        {isStreaming && messages[messages.length - 1]?.content === "" && (
           <div className="flex gap-3">
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"

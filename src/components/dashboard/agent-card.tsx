@@ -1,16 +1,21 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { MessageCircle, Bot, MoreVertical, Trash2 } from 'lucide-react';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { MessageCircle, Bot, MoreVertical, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { trpc } from '@/trpc/client';
+} from "@/components/ui/dropdown-menu";
+import { trpc } from "@/trpc/client";
 
 interface AgentCardProps {
   id: string;
@@ -19,11 +24,6 @@ interface AgentCardProps {
   messageCount: number;
   avatarColor: string;
 }
-
-const COLORS = [
-  '#6366f1', '#10b981', '#f59e0b',
-  '#ec4899', '#8b5cf6', '#06b6d4',
-];
 
 export function AgentCard({
   id,

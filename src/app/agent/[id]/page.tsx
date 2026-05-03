@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import { trpc } from '@/trpc/client';
-import { AgentDetailsPanel } from '@/components/agent/agent-details-panel';
-import { ChatPanel } from '@/components/agent/chat-panel';
-import { notFound } from 'next/navigation';
+import { use } from "react";
+import { trpc } from "@/trpc/client";
+import { AgentDetailsPanel } from "@/components/agent/agent-details-panel";
+import { ChatPanel } from "@/components/agent/chat-panel";
+import { notFound } from "next/navigation";
 
 const AVATAR_COLORS = [
-  '#6366f1', '#10b981', '#f59e0b',
-  '#ec4899', '#8b5cf6', '#06b6d4',
+  "#6366f1",
+  "#10b981",
+  "#f59e0b",
+  "#ec4899",
+  "#8b5cf6",
+  "#06b6d4",
 ];
 
 interface AgentPageProps {
@@ -32,9 +36,8 @@ export default function AgentPage({ params }: AgentPageProps) {
 
   if (!agent) return notFound();
 
-  const avatarColor = AVATAR_COLORS[
-    Math.abs(agent.id.charCodeAt(0)) % AVATAR_COLORS.length
-  ];
+  const avatarColor =
+    AVATAR_COLORS[Math.abs(agent.id.charCodeAt(0)) % AVATAR_COLORS.length];
 
   return (
     <div className="flex h-screen">

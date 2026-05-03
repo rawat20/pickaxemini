@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bot, Sparkles, MessageSquare, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Bot, Sparkles, MessageSquare, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { trpc } from '@/trpc/client';
+} from "@/components/ui/alert-dialog";
+import { trpc } from "@/trpc/client";
 
 interface AgentDetailsPanelProps {
   id: string;
@@ -40,7 +40,7 @@ export function AgentDetailsPanel({
   const deleteMutation = trpc.agents.delete.useMutation({
     onSuccess: () => {
       utils.agents.list.invalidate();
-      router.push('/');
+      router.push("/");
     },
   });
 
@@ -100,7 +100,9 @@ export function AgentDetailsPanel({
             </h3>
           </div>
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-            <p className="text-sm leading-relaxed text-foreground">{greeting}</p>
+            <p className="text-sm leading-relaxed text-foreground">
+              {greeting}
+            </p>
           </div>
         </div>
       </div>
@@ -115,7 +117,7 @@ export function AgentDetailsPanel({
               disabled={deleteMutation.isPending}
             >
               <Trash2 className="h-4 w-4" />
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete Agent'}
+              {deleteMutation.isPending ? "Deleting..." : "Delete Agent"}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>

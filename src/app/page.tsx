@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { trpc } from '@/trpc/client';
-import { Sidebar } from '@/components/layout/sidebar';
-import { AgentsGrid } from '@/components/dashboard/agents-grid';
-import { CreateAgentDrawer } from '@/components/layout/create-agent-drawer';
-import { Button } from '@/components/ui/button';
-import { Plus, Bot, MessageSquare } from 'lucide-react';
+import { useState } from "react";
+import { trpc } from "@/trpc/client";
+import { Sidebar } from "@/components/layout/sidebar";
+import { AgentsGrid } from "@/components/dashboard/agents-grid";
+import { CreateAgentDrawer } from "@/components/layout/create-agent-drawer";
+import { Button } from "@/components/ui/button";
+import { Plus, Bot, MessageSquare } from "lucide-react";
 
 export default function DashboardPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -22,7 +22,6 @@ export default function DashboardPage() {
 
       <div className="flex-1 lg:ml-80 flex flex-col min-h-screen">
         <div className="px-6 pt-6 space-y-4">
-
           {/* Card 1 — Dashboard Header + Create New */}
           <div className="rounded-xl border border-border bg-card px-5 py-4 flex items-center justify-between">
             <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
@@ -43,7 +42,9 @@ export default function DashboardPage() {
                 <Bot className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{totalAgents}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {totalAgents}
+                </p>
                 <p className="text-sm text-muted-foreground">Total Agents</p>
               </div>
             </div>
@@ -66,7 +67,9 @@ export default function DashboardPage() {
           {/* Card 3 — Your Agents label */}
           <div className="rounded-xl border border-border bg-card px-5 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Your Agents</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                Your Agents
+              </h2>
               <p className="text-sm text-muted-foreground">
                 Manage and interact with your AI agents
               </p>
@@ -80,7 +83,6 @@ export default function DashboardPage() {
           <div className="rounded-xl border border-border bg-card px-5 py-5">
             <AgentsGrid />
           </div>
-
         </div>
 
         <div className="pb-6" />

@@ -1,19 +1,16 @@
-// src/server/routers/conversation.ts
-
-import { z } from 'zod';
-import { router, publicProcedure } from '../trpc';
-import { getDb } from '@/lib/db';
-import { v4 as uuidv4 } from 'uuid';
+import { z } from "zod";
+import { router, publicProcedure } from "../trpc";
+import { getDb } from "@/services/db";
+import { v4 as uuidv4 } from "uuid";
 
 export const conversationsRouter = router({
-
   // GET conversation by agentId — one per agent
   getByAgent: publicProcedure
     .input(z.object({ agentId: z.string() }))
     .query(async ({ input }) => {
       const db = await getDb();
       const conversation = db.data.conversations.find(
-        (c) => c.agentId === input.agentId
+        (c) => c.agentId === input.agentId,
       );
       return conversation ?? null;
     }),
@@ -23,9 +20,9 @@ export const conversationsRouter = router({
     .input(
       z.object({
         agentId: z.string(),
-        role: z.enum(['user', 'assistant']),
+        role: z.enum(["user", "assistant"]),
         content: z.string().min(1),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -38,7 +35,7 @@ export const conversationsRouter = router({
 
       // Find existing conversation for this agent
       const existing = db.data.conversations.find(
-        (c) => c.agentId === input.agentId
+        (c) => c.agentId === input.agentId,
       );
 
       if (existing) {
@@ -66,7 +63,7 @@ export const conversationsRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       db.data.conversations = db.data.conversations.filter(
-        (c) => c.agentId !== input.agentId
+        (c) => c.agentId !== input.agentId,
       );
       await db.write();
       return { success: true };
