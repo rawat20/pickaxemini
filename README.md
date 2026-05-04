@@ -4,6 +4,19 @@ A full-stack platform to create, configure, and chat with custom AI agents power
 
 ---
 
+## Screenshots
+
+**Dashboard — manage all your agents at a glance**
+![Dashboard](docs/screenshots/dashboard.png)
+
+**Create New Agent — Gemini auto-generates the system prompt and greeting**
+![Create Agent](docs/screenshots/create-agent.png)
+
+**Agent Chat — real-time streaming chat with agent details sidebar**
+![Agent Chat](docs/screenshots/agent-chat.png)
+
+---
+
 ## Table of Contents
 
 - [Architecture](#architecture)
