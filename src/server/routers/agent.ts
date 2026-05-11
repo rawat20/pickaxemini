@@ -1,37 +1,62 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
-import { getDb } from "@/services/db";
+import { getMongoDb } from "@/lib/mongodb";
 import { v4 as uuidv4 } from "uuid";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
-export const agentsRouter = router({
-  // GET all agents
-  list: publicProcedure.query(async () => {
-    const db = await getDb();
+const agentProjection = { projection: { _id: 0 } } as const;
 
-    return db.data.agents.map((agent) => {
-      const conversation = db.data.conversations.find(
-        (c) => c.agentId === agent.id,
-      );
-      return {
-        ...agent,
-        messageCount: conversation?.messages.length ?? 0,
-      };
-    });
+export const agentsRouter = router({
+  list: publicProcedure.query(async () => {
+    const db = await getMongoDb();
+    const [agents, conversations] = await Promise.all([
+      db
+        .collection("agents")
+        .find({}, { ...agentProjection, sort: { createdAt: -1 } })
+        .toArray(),
+      db
+        .collection("conversations")
+        .find({}, { projection: { _id: 0, agentId: 1, messages: 1 } })
+        .toArray(),
+    ]);
+
+    const messageCountByAgent = new Map(
+      conversations.map((c) => [
+        c.agentId as string,
+        Array.isArray(c.messages) ? c.messages.length : 0,
+      ]),
+    );
+
+    return agents.map((agent) => ({
+      id: agent.id as string,
+      name: agent.name as string,
+      description: agent.description as string,
+      systemPrompt: agent.systemPrompt as string,
+      greeting: agent.greeting as string,
+      createdAt: agent.createdAt as string,
+      messageCount: messageCountByAgent.get(agent.id as string) ?? 0,
+    }));
   }),
 
-  // GET single agent by id
   get: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      const agent = db.data.agents.find((a) => a.id === input.id);
+      const db = await getMongoDb();
+      const agent = await db
+        .collection("agents")
+        .findOne({ id: input.id }, agentProjection);
       if (!agent) throw new Error("Agent not found");
-      return agent;
+      return {
+        id: agent.id as string,
+        name: agent.name as string,
+        description: agent.description as string,
+        systemPrompt: agent.systemPrompt as string,
+        greeting: agent.greeting as string,
+        createdAt: agent.createdAt as string,
+      };
     }),
 
-  // CREATE agent — calls FastAPI to generate system prompt
   create: publicProcedure
     .input(
       z.object({
@@ -40,7 +65,6 @@ export const agentsRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      // Call FastAPI to generate system prompt via Gemini
       const res = await fetch(`${FASTAPI_URL}/api/v1/agents/generate-prompt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,8 +78,6 @@ export const agentsRouter = router({
 
       const { system_prompt, suggested_greeting } = await res.json();
 
-      // Save to LowDB
-      const db = await getDb();
       const newAgent = {
         id: uuidv4(),
         name: input.name,
@@ -65,19 +87,20 @@ export const agentsRouter = router({
         createdAt: new Date().toISOString(),
       };
 
-      db.data.agents.push(newAgent);
-      await db.write();
+      const db = await getMongoDb();
+      await db.collection("agents").insertOne(newAgent);
 
       return newAgent;
     }),
 
-  // DELETE agent
   delete: publicProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      const db = await getDb();
-      db.data.agents = db.data.agents.filter((a) => a.id !== input.id);
-      await db.write();
+      const db = await getMongoDb();
+      await Promise.all([
+        db.collection("agents").deleteOne({ id: input.id }),
+        db.collection("conversations").deleteMany({ agentId: input.id }),
+      ]);
       return { success: true };
     }),
 });

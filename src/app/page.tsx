@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
           {/* Card 4 — Agents Grid */}
           <div className="rounded-xl border border-border bg-card px-5 py-5">
-            <AgentsGrid />
+            <AgentsGrid onRequestCreate={() => setDrawerOpen(true)} />
           </div>
         </div>
 

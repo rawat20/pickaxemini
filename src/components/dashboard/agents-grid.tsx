@@ -1,9 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { trpc } from "@/trpc/client";
 import { AgentCard } from "./agent-card";
 import { Bot } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const AVATAR_COLORS = [
@@ -15,7 +15,13 @@ const AVATAR_COLORS = [
   "#06b6d4",
 ];
 
-export function AgentsGrid() {
+type AgentsGridProps = {
+  /** When set, empty-state "Create Agent" opens the drawer instead of navigating to /create. */
+  onRequestCreate?: () => void;
+};
+
+export function AgentsGrid({ onRequestCreate }: AgentsGridProps) {
+  const router = useRouter();
   const { data: agents, isLoading } = trpc.agents.list.useQuery();
 
   if (isLoading) {
@@ -43,8 +49,13 @@ export function AgentsGrid() {
         <p className="text-sm text-muted-foreground mb-6">
           Create your first AI agent to get started
         </p>
-        <Button asChild>
-          <Link href="/create">Create Agent</Link>
+        <Button
+          type="button"
+          onClick={() =>
+            onRequestCreate ? onRequestCreate() : router.push("/create")
+          }
+        >
+          Create Agent
         </Button>
       </div>
     );
