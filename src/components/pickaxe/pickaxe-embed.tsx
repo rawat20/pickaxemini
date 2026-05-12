@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Script from "next/script";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Loader2, MessageCircle, X } from "lucide-react";
 import { cn } from "@/core/utils";
 
@@ -17,47 +17,62 @@ const PICKAXE_DEPLOYMENT_ID: string = _pickaxeDeploymentId;
 
 function hasEmbedContent(el: HTMLElement): boolean {
   if (el.children.length > 0) return true;
-  const h = el.getBoundingClientRect().height;
-  return h > 64;
+  return el.getBoundingClientRect().height > 64;
+}
+
+/** Removes the existing Pickaxe script tag so it can be re-injected fresh. */
+function removePickaxeScript() {
+  const el = document.querySelector(`script[src="${PICKAXE_BUNDLE}"]`);
+  el?.parentNode?.removeChild(el);
+}
+
+/** Injects the Pickaxe script fresh and calls onLoad when done. */
+function injectPickaxeScript(onLoad: () => void) {
+  removePickaxeScript();
+  const script = document.createElement("script");
+  script.src = PICKAXE_BUNDLE;
+  script.defer = true;
+  script.onload = onLoad;
+  script.onerror = onLoad; // unblock spinner even on error
+  document.body.appendChild(script);
 }
 
 const PANEL_W = "min(720px, 100vw)";
 const PANEL_H = "min(500px, 65vh)";
 
 export function PickaxeEmbed() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
   const [embedPainted, setEmbedPainted] = useState(false);
+  const mountId = useRef(0); // increments on each route change to re-key the embed div
+
+  // On every route change: close panel, reset state, re-inject script fresh
+  useEffect(() => {
+    mountId.current += 1;
+    setOpen(false);
+    setScriptReady(false);
+    setEmbedPainted(false);
+
+    injectPickaxeScript(() => setScriptReady(true));
+  }, [pathname]);
 
   useEffect(() => {
-    if (!open) {
-      setEmbedPainted(false);
-      return;
-    }
-
-    if (!scriptReady) {
+    if (!open || !scriptReady) {
       setEmbedPainted(false);
       return;
     }
 
     const el = document.getElementById(PICKAXE_DEPLOYMENT_ID);
-    if (!el) {
-      setEmbedPainted(true);
-      return;
-    }
+    if (!el) { setEmbedPainted(true); return; }
 
     const node = el as HTMLElement;
-    if (hasEmbedContent(node)) {
-      setEmbedPainted(true);
-      return;
-    }
+    if (hasEmbedContent(node)) { setEmbedPainted(true); return; }
 
     setEmbedPainted(false);
+
     const mo = new MutationObserver(() => {
-      if (hasEmbedContent(node)) {
-        setEmbedPainted(true);
-        mo.disconnect();
-      }
+      if (hasEmbedContent(node)) { setEmbedPainted(true); mo.disconnect(); }
     });
     mo.observe(node, { childList: true, subtree: true });
 
@@ -86,16 +101,6 @@ export function PickaxeEmbed() {
 
   return (
     <>
-      <Script
-        src={PICKAXE_BUNDLE}
-        strategy="lazyOnload"
-        onLoad={() => setScriptReady(true)}
-        onError={() => {
-          console.error("[PickaxeEmbed] Failed to load embed bundle.");
-          setScriptReady(true);
-        }}
-      />
-
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -114,9 +119,7 @@ export function PickaxeEmbed() {
           transform: scale(1.1);
           box-shadow: 0 12px 28px rgba(0,0,0,0.25);
         }
-        .pickaxe-fab.is-open {
-          animation: none;
-        }
+        .pickaxe-fab.is-open { animation: none; }
         .pulse-ring {
           position: absolute;
           inset: 0;
@@ -125,9 +128,7 @@ export function PickaxeEmbed() {
           opacity: 0.45;
           animation: pulse-ring 2s ease-out infinite;
         }
-        .pulse-ring-delay {
-          animation-delay: 0.7s;
-        }
+        .pulse-ring-delay { animation-delay: 0.7s; }
       `}</style>
 
       <div
@@ -146,11 +147,8 @@ export function PickaxeEmbed() {
         }}
         aria-hidden={!open}
       >
-        <div
-          className="relative flex min-h-0 flex-1 flex-col"
-          style={{ width: "100%", minHeight: 0 }}
-        >
-          {showLoader ? (
+        <div className="relative flex min-h-0 flex-1 flex-col" style={{ width: "100%", minHeight: 0 }}>
+          {showLoader && (
             <div
               className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/95 text-muted-foreground"
               aria-live="polite"
@@ -159,8 +157,10 @@ export function PickaxeEmbed() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm">Loading chat…</p>
             </div>
-          ) : null}
+          )}
+          {/* key remounts this div on every route change so Pickaxe gets a fresh node */}
           <div
+            key={mountId.current}
             id={PICKAXE_DEPLOYMENT_ID}
             style={{
               flex: "1 1 0",
