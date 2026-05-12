@@ -1,24 +1,47 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { Loader2, MessageCircle, X } from "lucide-react";
 import { cn } from "@/core/utils";
 
 const PICKAXE_BUNDLE = "https://studio.pickaxe.co/api/embed/bundle.js";
-const PICKAXE_DEPLOYMENT_ID = `${process.env.PICKAXE_DEPLOYMENT_ID}`;
 
-if (!PICKAXE_DEPLOYMENT_ID) {
-  throw new Error('Missing environment variable: "PICKAXE_DEPLOYMENT_ID"');
+const _pickaxeDeploymentId = process.env.NEXT_PUBLIC_PICKAXE_DEPLOYMENT_ID;
+if (!_pickaxeDeploymentId) {
+  throw new Error(
+    'Missing environment variable: "NEXT_PUBLIC_PICKAXE_DEPLOYMENT_ID" (e.g. deployment-…)',
+  );
+}
+const PICKAXE_DEPLOYMENT_ID: string = _pickaxeDeploymentId;
+
+function hasEmbedContent(el: HTMLElement): boolean {
+  if (el.children.length > 0) return true;
+  const h = el.getBoundingClientRect().height;
+  return h > 64;
 }
 
-function injectPickaxeScript(): void {
+function ensurePickaxeScript(onScriptDone: () => void): void {
   if (typeof document === "undefined") return;
-  if (document.querySelector(`script[data-pickaxe-embed="true"]`)) return;
-  const el = document.getElementById(PICKAXE_DEPLOYMENT_ID);
-  if (!el) return;
+  const existing = document.querySelector(
+    'script[data-pickaxe-embed="true"]',
+  ) as HTMLScriptElement | null;
+  if (existing) {
+    queueMicrotask(onScriptDone);
+    return;
+  }
+
+  const mount = document.getElementById(PICKAXE_DEPLOYMENT_ID);
+  if (!mount) return;
+
   const script = document.createElement("script");
   script.src = PICKAXE_BUNDLE;
   script.defer = true;
   script.setAttribute("data-pickaxe-embed", "true");
+  script.onload = () => {
+    script.dataset.loaded = "1";
+    onScriptDone();
+  };
+  script.onerror = () => onScriptDone();
   document.body.appendChild(script);
 }
 
@@ -27,11 +50,70 @@ const PANEL_H = "min(500px, 65vh)";
 
 export function PickaxeEmbed() {
   const [open, setOpen] = useState(false);
+  const [scriptReady, setScriptReady] = useState(false);
+  const [embedPainted, setEmbedPainted] = useState(false);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => injectPickaxeScript());
+    const id = requestAnimationFrame(() => {
+      ensurePickaxeScript(() => setScriptReady(true));
+    });
     return () => cancelAnimationFrame(id);
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setEmbedPainted(false);
+      return;
+    }
+
+    if (!scriptReady) {
+      setEmbedPainted(false);
+      return;
+    }
+
+    const el = document.getElementById(PICKAXE_DEPLOYMENT_ID);
+    if (!el) {
+      setEmbedPainted(true);
+      return;
+    }
+
+    const node = el as HTMLElement;
+    if (hasEmbedContent(node)) {
+      setEmbedPainted(true);
+      return;
+    }
+
+    setEmbedPainted(false);
+    const mo = new MutationObserver(() => {
+      if (hasEmbedContent(node)) {
+        setEmbedPainted(true);
+        mo.disconnect();
+      }
+    });
+    mo.observe(node, { childList: true, subtree: true });
+
+    const poll = window.setInterval(() => {
+      if (hasEmbedContent(node)) {
+        setEmbedPainted(true);
+        mo.disconnect();
+        window.clearInterval(poll);
+      }
+    }, 200);
+
+    const maxWait = window.setTimeout(() => {
+      setEmbedPainted(true);
+      mo.disconnect();
+      window.clearInterval(poll);
+    }, 15000);
+
+    return () => {
+      mo.disconnect();
+      window.clearInterval(poll);
+      window.clearTimeout(maxWait);
+    };
+  }, [open, scriptReady]);
+
+  const showLoader = open && (!scriptReady || !embedPainted);
 
   return (
     <>
@@ -69,7 +151,6 @@ export function PickaxeEmbed() {
         }
       `}</style>
 
-      {/* Chat Panel */}
       <div
         className={cn(
           "fixed right-0 bottom-0 z-[200] flex flex-col overflow-hidden",
@@ -87,18 +168,32 @@ export function PickaxeEmbed() {
         aria-hidden={!open}
       >
         <div
-          id={PICKAXE_DEPLOYMENT_ID}
-          style={{
-            flex: "1 1 0",
-            minHeight: 0,
-            overflow: "auto",
-            background: "#ffffff",
-            width: "100%",
-          }}
-        />
+          className="relative flex min-h-0 flex-1 flex-col"
+          style={{ width: "100%", minHeight: 0 }}
+        >
+          {showLoader ? (
+            <div
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/95 text-muted-foreground"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm">Loading chat…</p>
+            </div>
+          ) : null}
+          <div
+            id={PICKAXE_DEPLOYMENT_ID}
+            style={{
+              flex: "1 1 0",
+              minHeight: 0,
+              overflow: "auto",
+              background: "#ffffff",
+              width: "100%",
+            }}
+          />
+        </div>
       </div>
 
-      {/* Floating Action Button */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -124,14 +219,23 @@ export function PickaxeEmbed() {
           outline: "none",
         }}
       >
-        {/* Pulse rings — only when closed */}
         {!open && (
           <>
             <span className="pulse-ring" />
             <span className="pulse-ring pulse-ring-delay" />
           </>
         )}
-        <span style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.3s ease", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}>
+        <span
+          style={{
+            position: "relative",
+            zIndex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "transform 0.3s ease",
+            transform: open ? "rotate(90deg)" : "rotate(0deg)",
+          }}
+        >
           {open ? <X size={22} /> : <MessageCircle size={22} />}
         </span>
       </button>
