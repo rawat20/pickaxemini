@@ -40,7 +40,7 @@ export function AgentCard({
   });
 
   return (
-    <Card className="group relative transition-all duration-200 hover:shadow-lg hover:border-primary/20 flex flex-col">
+    <Card className="group relative flex flex-col overflow-visible border border-border bg-card shadow-sm ring-0 transition-all duration-200 hover:border-primary/30 hover:shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">

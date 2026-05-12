@@ -1,10 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { trpc } from "@/trpc/client";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "@/server/routers/_app";
 import { AgentCard } from "./agent-card";
+import { AgentCardSkeleton } from "./agent-card-skeleton";
 import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+type AgentList = inferRouterOutputs<AppRouter>["agents"]["list"];
 
 const AVATAR_COLORS = [
   "#6366f1",
@@ -16,22 +20,24 @@ const AVATAR_COLORS = [
 ];
 
 type AgentsGridProps = {
+  agents: AgentList | undefined;
+  isLoading: boolean;
   /** When set, empty-state "Create Agent" opens the drawer instead of navigating to /create. */
   onRequestCreate?: () => void;
 };
 
-export function AgentsGrid({ onRequestCreate }: AgentsGridProps) {
+export function AgentsGrid({
+  agents,
+  isLoading,
+  onRequestCreate,
+}: AgentsGridProps) {
   const router = useRouter();
-  const { data: agents, isLoading } = trpc.agents.list.useQuery();
 
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="h-48 rounded-xl border border-border bg-muted animate-pulse"
-          />
+          <AgentCardSkeleton key={i} />
         ))}
       </div>
     );

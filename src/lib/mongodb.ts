@@ -1,5 +1,8 @@
 import { MongoClient, type Db } from "mongodb";
 
+/** Atlas + Vercel often fail TLS over IPv6; IPv4 avoids alert 80 / internal error. */
+const clientOptions = { family: 4 as const };
+
 function requireMongoUri(): string {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
@@ -18,12 +21,15 @@ function getClientPromise(): Promise<MongoClient> {
   const uri = requireMongoUri();
   if (process.env.NODE_ENV === "development") {
     if (!global.__pickaxeMongoClientPromise) {
-      global.__pickaxeMongoClientPromise = new MongoClient(uri).connect();
+      global.__pickaxeMongoClientPromise = new MongoClient(
+        uri,
+        clientOptions,
+      ).connect();
     }
     return global.__pickaxeMongoClientPromise;
   }
   if (!prodClientPromise) {
-    prodClientPromise = new MongoClient(uri).connect();
+    prodClientPromise = new MongoClient(uri, clientOptions).connect();
   }
   return prodClientPromise;
 }

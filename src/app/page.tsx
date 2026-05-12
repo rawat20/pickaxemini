@@ -7,10 +7,12 @@ import { AgentsGrid } from "@/components/dashboard/agents-grid";
 import { CreateAgentDrawer } from "@/components/layout/create-agent-drawer";
 import { Button } from "@/components/ui/button";
 import { Plus, Bot, MessageSquare } from "lucide-react";
+import { PickaxeEmbed } from "@/components/pickaxe/pickaxe-embed";
 
 export default function DashboardPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { data: agents } = trpc.agents.list.useQuery();
+  const { data: agents, isPending: agentsPending } =
+    trpc.agents.list.useQuery();
 
   const totalAgents = agents?.length ?? 0;
   const totalMessages =
@@ -81,7 +83,11 @@ export default function DashboardPage() {
 
           {/* Card 4 — Agents Grid */}
           <div className="rounded-xl border border-border bg-card px-5 py-5">
-            <AgentsGrid onRequestCreate={() => setDrawerOpen(true)} />
+            <AgentsGrid
+              agents={agents}
+              isLoading={agentsPending}
+              onRequestCreate={() => setDrawerOpen(true)}
+            />
           </div>
         </div>
 
@@ -92,6 +98,7 @@ export default function DashboardPage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       />
+      <PickaxeEmbed />
     </div>
   );
 }
