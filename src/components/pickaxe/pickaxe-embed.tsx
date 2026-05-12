@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Script from "next/script";
 import { Loader2, MessageCircle, X } from "lucide-react";
 import { cn } from "@/core/utils";
 
@@ -20,31 +21,6 @@ function hasEmbedContent(el: HTMLElement): boolean {
   return h > 64;
 }
 
-function ensurePickaxeScript(onScriptDone: () => void): void {
-  if (typeof document === "undefined") return;
-  const existing = document.querySelector(
-    'script[data-pickaxe-embed="true"]',
-  ) as HTMLScriptElement | null;
-  if (existing) {
-    queueMicrotask(onScriptDone);
-    return;
-  }
-
-  const mount = document.getElementById(PICKAXE_DEPLOYMENT_ID);
-  if (!mount) return;
-
-  const script = document.createElement("script");
-  script.src = PICKAXE_BUNDLE;
-  script.defer = true;
-  script.setAttribute("data-pickaxe-embed", "true");
-  script.onload = () => {
-    script.dataset.loaded = "1";
-    onScriptDone();
-  };
-  script.onerror = () => onScriptDone();
-  document.body.appendChild(script);
-}
-
 const PANEL_W = "min(720px, 100vw)";
 const PANEL_H = "min(500px, 65vh)";
 
@@ -52,13 +28,6 @@ export function PickaxeEmbed() {
   const [open, setOpen] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
   const [embedPainted, setEmbedPainted] = useState(false);
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      ensurePickaxeScript(() => setScriptReady(true));
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -117,6 +86,16 @@ export function PickaxeEmbed() {
 
   return (
     <>
+      <Script
+        src={PICKAXE_BUNDLE}
+        strategy="lazyOnload"
+        onLoad={() => setScriptReady(true)}
+        onError={() => {
+          console.error("[PickaxeEmbed] Failed to load embed bundle.");
+          setScriptReady(true);
+        }}
+      />
+
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
