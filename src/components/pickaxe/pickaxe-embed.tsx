@@ -181,11 +181,11 @@ export function PickaxeEmbed() {
         className={cn("pickaxe-fab", open && "is-open")}
         style={{
           position: "fixed",
-          bottom: "24px",
-          right: "24px",
+          bottom: open ? "0rem" : "24px",
+          right: open ? "0.3rem" : "24px",
           zIndex: 210,
-          width: "56px",
-          height: "56px",
+          width: open ? "3rem" : "56px",
+          height: open ? "3rem" : "56px",
           borderRadius: "9999px",
           background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
           color: "#ffffff",

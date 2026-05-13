@@ -9,7 +9,7 @@ A full-stack platform to create, configure, and chat with custom AI agents power
 **Dashboard — manage all your agents at a glance**
 ![Dashboard](docs/screenshots/dashboard.png)
 
-**Create New Agent — Gemini auto-generates the system prompt and greeting**
+**Create New Agent (dashboard drawer) — Gemini auto-generates the system prompt and greeting**
 ![Create Agent](docs/screenshots/create-agent.png)
 
 **Agent Chat — real-time streaming chat with agent details sidebar**
@@ -80,10 +80,9 @@ Browser
 pickaxe-mini/
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx                    # Dashboard — agent grid
-│   │   ├── layout.tsx                  # Root layout with sidebar
+│   │   ├── page.tsx                    # Dashboard — agent grid + create drawer
+│   │   ├── layout.tsx                  # Root layout, fonts, global providers
 │   │   ├── providers.tsx               # tRPC + React Query providers
-│   │   ├── create/page.tsx             # Standalone agent creation page
 │   │   ├── agent/[id]/page.tsx         # Chat interface + agent details
 │   │   └── api/
 │   │       ├── trpc/[trpc]/route.ts    # tRPC fetch adapter

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/server/routers/_app";
 import { AgentCard } from "./agent-card";
@@ -22,8 +21,8 @@ const AVATAR_COLORS = [
 type AgentsGridProps = {
   agents: AgentList | undefined;
   isLoading: boolean;
-  /** When set, empty-state "Create Agent" opens the drawer instead of navigating to /create. */
-  onRequestCreate?: () => void;
+  /** Empty-state "Create Agent" — e.g. open the dashboard drawer. */
+  onRequestCreate: () => void;
 };
 
 export function AgentsGrid({
@@ -31,8 +30,6 @@ export function AgentsGrid({
   isLoading,
   onRequestCreate,
 }: AgentsGridProps) {
-  const router = useRouter();
-
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -55,12 +52,7 @@ export function AgentsGrid({
         <p className="text-sm text-muted-foreground mb-6">
           Create your first AI agent to get started
         </p>
-        <Button
-          type="button"
-          onClick={() =>
-            onRequestCreate ? onRequestCreate() : router.push("/create")
-          }
-        >
+        <Button type="button" onClick={onRequestCreate}>
           Create Agent
         </Button>
       </div>
